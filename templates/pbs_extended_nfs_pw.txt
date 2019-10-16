@@ -104,8 +104,8 @@ Order = 10
         Order = 5
         HideLabel = true
         Config.Plugin = pico.widget.HtmlTemplateWidget
-        Config.Template = '''<p>Particleworks is the leading software for liquid flow simulation. This cutting-edge, particle-based simulator makes it easy to create and analyze 3D mode	 ls in a variety of industrial contexts - from oil sloshing, lubrication and cooling for the automotive industry to mixing and kneading for medicine, materials and foods.
-	With its intuitive interface, its ultra-fast solver, and its powerful visualization tools, Particleworks provides all the tools needed for analyzing liquid flow behavior to opti	 mize your engineering process. <a href=\"https://www.particleworks.com/home_en.html\" target=\"_blank\" rel="noopener">Link</a></p>'''
+        Config.Template = '''<p>Particleworks is the leading software for liquid flow simulation. This cutting-edge, particle-based simulator makes it easy to create and analyze 3D models in a variety of industrial contexts - from oil sloshing, lubrication and cooling for the automotive industry to mixing and kneading for medicine, materials and foods.
+	With its intuitive interface, its ultra-fast solver, and its powerful visualization tools, Particleworks provides all the tools needed for analyzing liquid flow behavior to optimize your engineering process. <a href=https://www.particleworks.com/home_en.html target="_blank">Link</a></p>'''
 
     [[parameters Virtual Machines ]]
     Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application."
@@ -121,7 +121,7 @@ Order = 10
         Label = Master VM Type
         Description = The VM type for scheduler master and shared filer.
         ParameterType = Cloud.MachineType
-        DefaultValue = Standard_DS3_v2
+        DefaultValue = Standard_D4s_v3
 
         [[[parameter ExecuteMachineType]]]
         Label = Execute VM Type

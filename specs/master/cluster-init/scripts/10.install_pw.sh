@@ -2,7 +2,7 @@
 # Copyright (c) 2019 Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
 set -exuv
 
-echo "starting 10.master.sh"
+echo "starting 10.install_pw.sh"
 
 # disabling selinux
 echo "disabling selinux"
@@ -40,12 +40,12 @@ fi
 # License Port Setting
 LICENSE=$(jetpack config LICENSE)
 set +u
-(echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOMEDIR}/apps/pw-linux-package/module"; echo "${HOMEDIR}/apps/pw-linux-package/Particleworks.sh") > /etc/profile.d/pw.sh
+(echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/opt/pbs/bin:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") > /etc/profile.d/pw.sh
 chmod +x /etc/profile.d/pw.sh
 chown ${CUSER}:${CUSER} /etc/profile.d/pw.sh
 CMD2=$(grep PARTICLE_LICENSE_FILE ${HOMEDIR}/.bashrc) | exit 0 
 if [[ -z "${CMD2}" ]]; then
-   (echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") >> ${HOMEDIR}/.bashrc
+   (echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/opt/pbs/bin:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") >> ${HOMEDIR}/.bashrc
 fi
 set -u
 
@@ -91,4 +91,4 @@ chown ${CUSER}:${CUSER} ${HOMEDIR}/pwrun.sh
 popd
 rm -rf $tmpdir
 
-echo "end of 10.master.sh"
+echo "end of 10.install_pw.sh"

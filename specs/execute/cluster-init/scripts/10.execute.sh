@@ -20,15 +20,30 @@ sudo sed -i -e "s/^SELINUX=enforcing$/SELINUX=disabled/g" /etc/selinux/config
 VMSKU=`cat /proc/cpuinfo | grep "model name" | head -1 | awk '{print $7}'`
 CORES=$(grep cpu.cores /proc/cpuinfo | wc -l)
 
-# license port setting
+# get file name
+PWFILENAME=$(jetpack config PWFileName)
+# set PW version
+PW_VERSION=$(echo $PWFILENAME | awk '{print $2}')
+
+# Create tempdir
+tmpdir=$(mktemp -d)
+pushd $tmpdir
+
+# resource ulimit setting
+CMD1=$(grep ulimit ${HOMEDIR}/.bashrc | head -2)
+if [[ -z "${CMD1}" ]]; then
+   (echo "ulimit -m unlimited") >> ${HOMEDIR}/.bashrc
+fi
+
+# License Port Setting
 LICENSE=$(jetpack config LICENSE)
-(echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOMEDIR}/apps/pw-linux-package/module"; echo "${HOMEDIR}/apps/pw-linux-package/Particleworks.sh") > /etc/profile.d/pw.sh
+set +u
+(echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") > /etc/profile.d/pw.sh
 chmod +x /etc/profile.d/pw.sh
 chown ${CUSER}:${CUSER} /etc/profile.d/pw.sh
 CMD2=$(grep PARTICLE_LICENSE_FILE ${HOMEDIR}/.bashrc) | exit 0 
-set +u
 if [[ -z "${CMD2}" ]]; then
-   (echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOMEDIR}/apps/pw-linux-package/module"; echo "${HOMEDIR}/apps/pw-linux-package/Particleworks.sh") >> ${HOMEDIR}/.bashrc
+   (echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") >> ${HOMEDIR}/.bashrc
 fi
 set -u
 
@@ -58,23 +73,39 @@ fi
 
 ## HC/HB set up
 if [[ ${CORES} = 44 ]] ; then
-  echo "Proccesing HC44rs"
-  grep "vm.zone_reclaim_mode = 1" /etc/sysctl.conf || echo "vm.zone_reclaim_mode = 1" >> /etc/sysctl.conf sysctl -p
-  # resource unlimit setting
-  CMD1=$(tail -1 /etc/security/limits.conf)
-  if [[ $CMD1 != '* soft nofile 65535' ]]; then
-    (echo "* hard memlock unlimited"; echo "* soft memlock unlimited"; echo "* hard nofile 65535"; echo "* soft nofile 65535") >> /etc/security/limits.conf
-  fi
+   echo "Proccesing HC44rs"
+   grep "vm.zone_reclaim_mode = 1" /etc/sysctl.conf || echo "vm.zone_reclaim_mode = 1" >> /etc/sysctl.conf sysctl -p
+   # resource unlimit setting
+   CMD1=$(tail -1 /etc/security/limits.conf)
+   if [[ $CMD1 != '* soft nofile 65535' ]]; then
+     (echo "* hard memlock unlimited"; echo "* soft memlock unlimited"; echo "* hard nofile 65535"; echo "* soft nofile 65535") >> /etc/security/limits.conf
+   fi
 fi
 
 if [[ ${CORES} = 60 ]] ; then
-  echo "Proccesing HB60rs"
-  grep "vm.zone_reclaim_mode = 1" /etc/sysctl.conf || echo "vm.zone_reclaim_mode = 1" >> /etc/sysctl.conf sysctl -p
-  # resource unlimit setting
-  CMD1=$(tail -1 /etc/security/limits.conf)
-  if [[ $CMD1 != '* soft nofile 65535' ]]; then
-    (echo "* hard memlock unlimited"; echo "* soft memlock unlimited"; echo "* hard nofile 65535"; echo "* soft nofile 65535") >> /etc/security/limits.conf
-  fi
+   echo "Proccesing HB60rs"
+   grep "vm.zone_reclaim_mode = 1" /etc/sysctl.conf || echo "vm.zone_reclaim_mode = 1" >> /etc/sysctl.conf sysctl -p
+   # resource unlimit setting
+   CMD1=$(tail -1 /etc/security/limits.conf)
+   if [[ $CMD1 != '* soft nofile 65535' ]]; then
+      (echo "* hard memlock unlimited"; echo "* soft memlock unlimited"; echo "* hard nofile 65535"; echo "* soft nofile 65535") >> /etc/security/limits.conf
+   fi
+fi
+
+## NC/NV set up
+if [[ ${CORES} = 6 ]] || [[ ${CORES} = 12 ]] || [[ ${CORES} = 24 ]] ; then
+   echo "Proccesing NC/NV GPU setting"
+   grep "vm.zone_reclaim_mode = 1" /etc/sysctl.conf || echo "vm.zone_reclaim_mode = 1" >> /etc/sysctl.conf sysctl -p
+   # resource unlimit setting
+   CMD1=$(tail -1 /etc/security/limits.conf)
+   if [[ $CMD1 != '* soft nofile 65535' ]]; then
+      (echo "* hard memlock unlimited"; echo "* soft memlock unlimited"; echo "* hard nofile 65535"; echo "* soft nofile 65535") >> /etc/security/limits.conf
+   fi
+   ## GPU set up
+   wget -nv "http://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-repo-rhel7-9.1.85-1.x86_64.rpm" -o ${HOMEDIR}/cuda-repo-rhel7-9.1.85-1.x86_64.rpm
+   yum isntall -y ${HOMEDIR}/cuda-repo-rhel7-9.1.85-1.x86_64.rpm
+   yum clean all
+   yum install -y cuda-9-1
 fi
 
 echo "ending 10.execute node set up"
