@@ -62,9 +62,9 @@ Particleworks用のテンプレートになっています。
 4. MasterノードのIPアドレスを固定設定
 	 - 一旦停止後、再度起動した場合にアクセスする先のIPアドレスが変更されない
 
-![Particleworks/Granuleworks テンプレート構成](https://raw.githubusercontent.com/hirtanak/osspbsdefault/master/OSSPBSDefaultDiagram.png "OSS PBS Default テンプレート構成")
+![Particleworks/Granuleworks テンプレート構成](https://raw.githubusercontent.com/hirtanak/scripts/master/cctemplatedefaultdiagram.png " Particleworks/Granuleworks テンプレート構成")
 
-## Particleworks/Granuleworksテンプレートインストール方法
+## Particleworks/Granuleworks テンプレートインストール方法
 
 前提条件: テンプレートを利用するためには、Azure CycleCloud CLIのインストールと設定が必要です。詳しくは、 [こちら](https://docs.microsoft.com/en-us/azure/cyclecloud/install-cyclecloud-cli) の文書からインストールと展開されたAzure CycleCloudサーバのFQDNの設定が必要です。
 
