@@ -5,15 +5,15 @@
 1. Prepaire for your Particleworks bilnary.
 1. Install CycleCloud CLI
 
-## How to install 
+## How to install
 
-1. tar zxvf cyclecloud-Particleworks<version>.zip
-1. cd cyclecloud-Particleworks<version>
-1. put Particleworks library/model on <template>/blob directory.
-1. pug OSS PBS Pro files on <template>/blob directory.
+1. tar zxvf cyclecloud-Particleworks.zip
+1. cd cyclecloud-Particleworks
+1. put Particleworks library/model on /blob directory.
+1. pug OSS PBS Pro files on /blob directory.
 1. Rewrite "Files" attribute for your binariy in "project.ini" file.
 1. run "cyclecloud project upload azure-storage" for uploading template to CycleCloud
-1. "cyclecloud import_template -f templates/pbs_extended_nfs_pw.txt" for register this template to your CycleCloud 
+1. "cyclecloud import_template -f templates/pbs_extended_nfs_pw.txt" for register this template to your CycleCloud
 
 ## How to run Prometech Particleworks
 
@@ -25,7 +25,6 @@
 #PBS -j oe
 #PBS -l select=1:ncpus=36
 NP=36
-
 # MPI settings HB anf HC setting
 export MPI_ROOT="/shared/home/azureuser/apps/intel/impi/2018.4.274"
 export I_MPI_ROOT=$MPI_ROOT
@@ -35,8 +34,7 @@ source /opt/intel/impi/2018.4.274/bin64/mpivars.sh
 export LD_LIBRARY_PATH=/shared/home/azureuser/apps/pw-linux-package/module
 export PARTICLE_LICENSE_FILE=27000@<license server IP Address>
 export DISPLAY=localhost:0.0
-<license server IP Address> <license server hostname> >> /etc/hosts
-
+"license server IP Address" "license server hostname" >> /etc/hosts
 cd ${HOME}/apps/prj # move on project directory
 ${HOME}/apps/pw-linux-package/module/app.solver.double -p scene -k simd -n ${NP} 2>&1 | tee PWlog-`date +%Y%m%d_%H-%M-%S`.log
 </pre></code>
@@ -82,3 +80,4 @@ Particleworks/Granuleworksテンプレートインストール方法
 ***
 Copyright Hiroshi Tanaka, hirtanak@gmail.com, @hirtanak All rights reserved.
 Use of this source code is governed by MIT license that can be found in the LICENSE file.
+
