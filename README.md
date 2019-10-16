@@ -11,11 +11,11 @@
 1. cd cyclecloud-Particleworks<version>
 1. put Particleworks library/model on <template>/blob directory.
 1. pug OSS PBS Pro files on <template>/blob directory.
-1. Rewrite "Files" attribute for your binariy in "project.ini" file. 
+1. Rewrite "Files" attribute for your binariy in "project.ini" file.
 1. run "cyclecloud project upload azure-storage" for uploading template to CycleCloud
-1. "cyclecloud import_template -f templates/pbs_extended_nfs_pw.txt" for register this template to your CycleCloud
+1. "cyclecloud import_template -f templates/pbs_extended_nfs_pw.txt" for register this template to your CycleCloud 
 
-## How to run Siemens Particleworks
+## How to run Prometech Particleworks
 
 1. Model and Directory set up
 1. qsub ~/pwrun.sh (sample as below)
