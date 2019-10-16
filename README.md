@@ -43,7 +43,7 @@ ${HOME}/apps/pw-linux-package/module/app.solver.double -p scene -k simd -n ${NP}
 1. This tempate support only single administrator. So you have to use same user between superuser(initial Azure CycleCloud User) and deployment user of this template
 1. master node may be fail if you choose DS3_v2 (14GB) due to shortage of memory requirement. Currently we set up D4s_v3 (16GB) as default.
 
-# Azure CycleCloud用テンプレート:Particleworks(NFS/PBSPro)
+# Azure CycleCloud用テンプレート:Prometech Particleworks/Granuleworks (NFS/PBSPro)
 
 [Azure CycleCloud](https://docs.microsoft.com/en-us/azure/cyclecloud/) はMicrosoft Azure上で簡単にCAE/HPC/Deep Learning用のクラスタ環境を構築できるソリューションです。
 
@@ -64,7 +64,7 @@ Particleworks用のテンプレートになっています。
 
 ![Particleworks/Granuleworks テンプレート構成](https://raw.githubusercontent.com/hirtanak/osspbsdefault/master/OSSPBSDefaultDiagram.png "OSS PBS Default テンプレート構成")
 
-Particleworks/Granuleworksテンプレートインストール方法
+## Particleworks/Granuleworksテンプレートインストール方法
 
 前提条件: テンプレートを利用するためには、Azure CycleCloud CLIのインストールと設定が必要です。詳しくは、 [こちら](https://docs.microsoft.com/en-us/azure/cyclecloud/install-cyclecloud-cli) の文書からインストールと展開されたAzure CycleCloudサーバのFQDNの設定が必要です。
 
