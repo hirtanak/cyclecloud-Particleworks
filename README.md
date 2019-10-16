@@ -51,13 +51,20 @@ ${HOME}/apps/pw-linux-package/module/app.solver.double -p scene -k simd -n ${NP}
 
 Azure CyceCloudのインストールに関しては、[こちら](https://docs.microsoft.com/en-us/azure/cyclecloud/quickstart-install-cyclecloud) のドキュメントを参照してください。
 
-Particleworks用のテンプレートになっています。
-以下の構成、特徴を持っています。
+本プロジェクトはプロメテックソフトウェア Particleworks/Granuleworks用のテンプレートになっています。
+https://www.prometech.co.jp/
+	
+About Prometech Software, Inc.
+プロメテック・ソフトウェアは、日本発のシミュレーション技術の事業化とそのグローバル展開を目的に、 東京大学発ベンチャーとして2004 年に設立されました。
+​粒子法シミュレーション技術などの物理モデルの開発を中核に、HPC・GPGPU技術および可視化・CG 技術を結集し、製造業界が目指す「高付加価値なものづくり」の実現に貢献しています。
+プロメテックのシミュレーション技術は、自動車・機械・素材・化学・電機・食品・消費財・医療・土木・防災・エネルギーなど、幅広い分野で活用されています
+
+本テンプレートは以下の構成、特徴を持っています。
 
 1. OSS PBS ProジョブスケジューラをMasterノードにインストール
 2. H16r, H16r_Promo, HC44rs, HB60rsを想定したテンプレート、イメージ
 	 - OpenLogic CentOS 7.6 HPC を利用
-	 - GPU仮想マシンは対応予定
+	 - GPU仮想マシンは対応予定(2019/10-11月)
 3. Masterノードに512GB * 2 のNFSストレージサーバを搭載
 	 - Executeノード（計算ノード）からNFSをマウント
 4. MasterノードのIPアドレスを固定設定
