@@ -210,8 +210,8 @@ Order = 20
         [[[parameter configuration_LICENSE]]]
     	requied = False
 	label = License Server
-	Description = "License Server Location ex.27000@<Server IP Address>"
-	defaultvalue = 27000@serverIPAddress
+	Description = "License Server Location ex. <port>@<Server IP Address>"
+	defaultvalue = port@serverIPAddress
 
     [[parameters Software]]
     Description = "Specify the scheduling software, and base OS installed on all nodes, and optionally the cluster-init and chef versions from your Locker."
