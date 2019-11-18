@@ -17,26 +17,7 @@
 ## How to run Prometech Particleworks
 
 1. set up your project directry and model.
-1. qsub ./pwrun.sh (sample as below)
-
-<pre><code>
-#!/bin/bash
-#PBS -j oe
-#PBS -l select=1:ncpus=36
-NP=36
-# MPI settings HB anf HC setting
-export MPI_ROOT="/shared/home/azureuser/apps/intel/impi/2018.4.274"
-export I_MPI_ROOT=$MPI_ROOT
-export I_MPI_DEBUG=5
-export I_MPI_FABRICS=shm:ofa # for 2019, use I_MPI_FABRICS=shm:ofi
-source /opt/intel/impi/2018.4.274/bin64/mpivars.sh
-export LD_LIBRARY_PATH=/shared/home/azureuser/apps/pw-linux-package/module
-export PARTICLE_LICENSE_FILE=27000@<license server IP Address>
-export DISPLAY=localhost:0.0
-"license server IP Address" "license server hostname" >> /etc/hosts
-cd ${HOME}/apps/prj # move on project directory
-${HOME}/apps/pw-linux-package/module/app.solver.double -p scene -k simd -n ${NP} 2>&1 | tee PWlog-`date +%Y%m%d_%H-%M-%S`.log
-</pre></code>
+1. qsub ./pwrun.sh (contact Prometech)
 
 ## Known Issues
 1. This tempate support only single administrator. So you have to use same user between superuser(initial Azure CycleCloud User) and deployment user of this template
@@ -88,4 +69,3 @@ About Prometech Software, Inc.
 ***
 Copyright Hiroshi Tanaka, hirtanak@gmail.com, @hirtanak All rights reserved.
 Use of this source code is governed by MIT license that can be found in the LICENSE file.
-
