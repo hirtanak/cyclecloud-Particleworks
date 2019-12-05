@@ -1,24 +1,21 @@
-# Azure CycleCloud template for PW
+# Azure CycleCloud template for Promect Particleworks
 
 ## Prerequisites
-
 1. Prepaire for your Particleworks bilnary.
 1. Install CycleCloud CLI
 
 ## How to install 
-
 1. tar zxvf cyclecloud-Particleworks<version>.tar.gz
 1. cd cyclecloud-Particleworks<version>
 1. put Particleworks binary/model on <template>/blob directory.
 1. Rewrite "Files" attribute for your binariy in "project.ini" file. 
 1. run "cyclecloud project upload azure-storage" for uploading template to CycleCloud
 1. "cyclecloud import_template -f templates/slurm_extended_nfs_pw.txt" for register this template to your CycleCloud
-
-## How to run PW
-
+	
+## How to run Particleworks
 1. Check License Server setting
-3. Upload and Modify Slurm script file
-4. sbatch -c 6 -n 1 run.sh (by GPU)
+1. Upload and Modify Slurm script file
+1. sbatch -c 6 -n 1 run.sh (by GPU)
 
 ## Known Issues
 1. This tempate support only single administrator. So you have to use same user between superuser(initial Azure CycleCloud User) and deployment user of this template
