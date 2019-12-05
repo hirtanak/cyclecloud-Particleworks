@@ -11,15 +11,10 @@
 1. Rewrite "Files" attribute for your binariy in "project.ini" file. 
 1. run "cyclecloud project upload azure-storage" for uploading template to CycleCloud
 1. "cyclecloud import_template -f templates/slurm_extended_nfs_pw.txt" for register this template to your CycleCloud
-	
-## How to run Particleworks
-1. Check License Server setting
-1. Upload and Modify Slurm script file
-1. sbatch -c 6 -n 1 run.sh (by GPU)
 
 ## Known Issues
 1. This tempate support only single administrator. So you have to use same user between superuser(initial Azure CycleCloud User) and deployment user of this template
-2. Currently AutoScale is disabled. you have to create execute node and get IP. In addtion, create hosts file for your execute node environment.
+1. Currently AutoScale is disabled. you have to create execute node and get IP. In addtion, create hosts file for your execute node environment.
 
 # Azure CycleCloud用テンプレート:PW(NFS/Slurm)
 
