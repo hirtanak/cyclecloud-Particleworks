@@ -17,7 +17,7 @@ Partickeworks用のテンプレートになっています。
 
 ![テンプレート構成](https://raw.githubusercontent.com/hirtanak/scripts/master/20191206-particleworks.jpg "テンプレート構成")
 
-Particleworksテンプレートインストール方法
+## Particleworksテンプレートインストール方法
 
 前提条件: テンプレートを利用するためには、Azure CycleCloud CLIのインストールと設定が必要です。詳しくは、 [こちら](https://docs.microsoft.com/en-us/azure/cyclecloud/install-cyclecloud-cli) の文書からインストールと展開されたAzure CycleCloudサーバのFQDNの設定が必要です。
 
@@ -33,7 +33,8 @@ Particleworksテンプレートインストール方法
    - cyclecloud import_template -f templates/slurm_extended_nfs_pw.txt
 1. 削除したい場合、 cyclecloud delete_template Particleworks コマンドで削除可能
 
-ジョブ実行の方法
+## ジョブ実行の方法
+ジョブの実行コマンドについてはプロメテック社にお問い合わせください。
 
 1. プロジェクトディレクトリの作成・移動
 1. sbatchコマンドでSlurmへジョブを投入
