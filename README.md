@@ -1,16 +1,3 @@
-# Azure CycleCloud template for Promect Particleworks
-
-## Prerequisites
-1. Prepaire for your Particleworks bilnary.
-1. Install CycleCloud CLI
-
-## How to install 
-1. tar zxvf cyclecloud-Particleworks<version>.tar.gz
-1. cd cyclecloud-Particleworks<version>
-1. put Particleworks binary/model on <template>/blob directory.
-1. Rewrite "Files" attribute for your binariy in "project.ini" file. 
-1. run "cyclecloud project upload azure-storage" for uploading template to CycleCloud
-
 # Azure CycleCloud用テンプレート:PW(NFS/Slurm)
 [Azure CycleCloud](https://docs.microsoft.com/en-us/azure/cyclecloud/) はMicrosoft Azure上で簡単にCAE/HPC/Deep Learning用のクラスタ環境を構築できるソリューションです。
 
