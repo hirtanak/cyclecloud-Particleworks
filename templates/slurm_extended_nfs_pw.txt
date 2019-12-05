@@ -1,0 +1,367 @@
+# Copyright (c) master Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
+# Licensed under the MIT License.
+################################
+## Cluster Configuration File ##
+################################
+
+[cluster Particleworks]
+FormLayout = selectionpanel
+Category = applications
+IconUrl = https://raw.githubusercontent.com/hirtanak/scripts/master/prometechlogo.jpg
+
+Autoscale = $Autoscale
+
+    [[node defaults]]
+    UsePublicNetwork = $UsePublicNetwork
+    Credentials = $Credentials    
+    SubnetId = $SubnetId
+    Region = $Region
+    KeyPairLocation = ~/.ssh/cyclecloud.pem
+    
+        [[[configuration]]]
+        slurm.version = $configuration_slurm_version
+        PWFileName = $configuration_PWFileName
+        LICENSE = $configuration_LICENSE
+	Hostname1 = $configuration_Hostname1
+
+        [[[cluster-init cyclecloud/slurm:default:2.0.2]]]
+        Optional = true
+
+    [[node master]]
+    MachineType = $MasterMachineType
+    ImageName = $MasterImageName
+    IsReturnProxy = $ReturnProxy
+    AdditionalClusterInitSpecs = $MasterClusterInitSpecs
+
+        [[[configuration]]]
+
+        [[[cluster-init cyclecloud/slurm:master:2.0.2]]]
+        [[[cluster-init Particleworks:master:2.0.2]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $UsePublicNetwork
+        StaticPublicIpAddress = true
+
+        [[[input-endpoint ganglia]]]
+        PrivatePort = 8652
+        PublicPort = 8652
+
+        # Add 2 premium disks in a RAID 0 configuration to the NFS export
+        [[[volume nfs-1]]]
+        Size = 512
+        SSD = True
+        Mount = nfs
+        Persistent = true
+
+        [[[volume nfs-2]]]
+        Size = 512
+        SSD = True
+        Mount = nfs
+        Persistent = true
+
+        [[[configuration cyclecloud.mounts.nfs]]]
+        mountpoint = /mnt/exports/apps
+        fs_type = ext4
+        raid_level = 0
+
+        [[[configuration cyclecloud.exports.nfs_data]]]
+        type = nfs
+        export_path = /mnt/exports/apps
+
+    [[nodearray hpc]]
+    MachineType = $HPCMachineType
+    ImageName = $HPCImageName
+    MaxCoreCount = $MaxHPCExecuteCoreCount
+    Azure.MaxScalesetSize = $HPCMaxScalesetSize
+    AdditionalClusterInitSpecs = $HPCClusterInitSpecs
+
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.default_partition = true
+        slurm.hpc = true
+
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init Particleworks:gpuexecute:2.0.2]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic
+
+        [[[configuration cyclecloud.mounts.nfs_data]]]
+        type = nfs
+        mountpoint = /mnt/exports/apps
+        export_path = /mnt/exports/apps
+
+    [[nodearray htc]]
+    MachineType = $HTCMachineType
+    ImageName = $HTCImageName
+    MaxCoreCount = $MaxHTCExecuteCoreCount
+    Interruptible = $HTCUseLowPrio
+    AdditionalClusterInitSpecs = $HTCClusterInitSpecs
+
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.hpc = false
+
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init Particleworks:cpuexecute:2.0.2]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic
+
+        [[[configuration cyclecloud.mounts.nfs_data]]]
+        type = nfs
+        mountpoint = /mnt/exports/apps
+        export_path = /mnt/exports/apps
+
+[parameters About]
+Order = 1
+
+    [[parameters About Particleworks]]
+
+        [[[parameter Particleworks]]]
+        HideLabel = true
+        Config.Plugin = pico.widget.HtmlTemplateWidget
+        Config.Template = '''<p>Particleworks is the leading software for liquid flow simulation. This cutting-edge, particle-based simulator makes it easy to create and analyze 3D mode        ls in a variety of industrial contexts - from oil sloshing, lubrication and cooling for the automotive industry to mixing and kneading for medicine, materials and foods.
+        Go https://www.particleworks.com/home_en.html</p>'''
+
+[parameters Required Settings]
+Order = 10
+
+    [[parameters Virtual Machines ]]
+    Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application. HPC as default partition for GPU usage. HTC is another partiction for GPU."
+    Order = 30
+
+        [[[parameter Region]]]
+        Label = Region
+        Description = Deployment Location
+        ParameterType = Cloud.Region
+        DefaultValue = japaneast
+	Order = 31
+
+        [[[parameter MasterMachineType]]]
+        Label = Master VM Type
+        Description = The VM type for scheduler master and shared filer.
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_D12_v2
+        Order = 32
+
+        [[[parameter HPCMachineType]]]
+        Label = HPC VM Type
+        Description = The VM type for HPC execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_NC6s_v3
+
+        Config.Filter := Package in {"Standard_NC6s_v3", "Standard_NC12s_v3", "Standard_NC24rs_v3"}
+        config.plugin = pico.control.AutoCompleteDropdown
+            [[[[list Config.Entries]]]]
+            Name = Standard_NC6s_v3
+            Label = Standard_NC6s_v3
+            [[[[list Config.Entries]]]]
+            Name = Standard_NC12s_v3
+            Label = Standard_NC12s_v3
+            [[[[list Config.Entries]]]]
+            Name = Standard_NC24s_v3
+            Label = Standard_NC24s_v3
+            [[[[list Config.Entries]]]]
+            Name = Standard_NC24rs_v3
+            Label = Standard_NC24rs_v3
+        Order = 33
+
+        [[[parameter HTCMachineType]]]
+        Label = HTC VM Type
+        Description = The VM type for HTC execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_H16r
+
+        Config.Filter := Package in {"Standard_H16r", "Standard_H16r_Promo", "Standard_HB60rs", "Standard_HC44rs"}
+        config.plugin = pico.control.AutoCompleteDropdown
+            [[[[list Config.Entries]]]]
+            Name = Standard_H16r
+            Label = Standard_H16r
+            [[[[list Config.Entries]]]]
+            Name = Standard_H16r_Promo
+            Label = Standard_H16r_Promo
+            [[[[list Config.Entries]]]]
+            Name = Standard_HB60rs
+            Label = Standard_HB60rs
+            [[[[list Config.Entries]]]]
+            Name = Standard_HC44rs
+            Label = Standard_HC44rs
+        Order = 34
+
+    [[parameters Auto-Scaling]]
+    Description = "The cluster can autoscale to the workload by Slurm HPC partition is used for GPU, HTC partition is used for CPU"
+    Order = 40
+
+        [[[parameter Autoscale]]]
+        Label = Autoscale
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Start and stop execute instances automatically
+
+        [[[parameter MaxHPCExecuteCoreCount]]]
+        Label = Max HPC Cores
+        Description = The total number of HPC execute cores to start
+        DefaultValue = 24
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 1
+        Config.IntegerOnly = true
+
+        [[[parameter MaxHTCExecuteCoreCount]]]
+        Label = Max HTC Cores
+        Description = The total number of HTC execute cores to start
+        DefaultValue = 32
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 1
+        Config.IntegerOnly = true
+
+        [[[parameter HPCMaxScalesetSize]]]
+        Label = Max VMs per Scaleset
+        Description = The maximum number of VMs created per VM Scaleset e.g. switch in Slurm.
+        DefaultValue = 100
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 1
+        Config.IntegerOnly = true
+
+        [[[parameter HPCUseLowPrio]]]
+        Label = HPC Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for HPC(default and GPU) execute hosts
+
+        [[[parameter HTCUseLowPrio]]]
+        Label = HTC Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for HTC(CPU) execute hosts
+
+    [[parameters Networking]]
+    Order = 50
+
+        [[[parameter SubnetId]]]
+        Label = Subnet ID
+        Description = Subnet Resource Path (ResourceGroup/VirtualNetwork/Subnet)
+        ParameterType = Azure.Subnet
+        Required = True
+
+
+[parameters Advanced Settings]
+Order = 20
+
+    [[parameters Azure Settings]]
+    Order = 30
+
+        [[[parameter Credentials]]]
+        Description = The credentials for the cloud provider
+        ParameterType = Cloud.Credentials
+
+    [[parameters Slurm Settings ]]
+    Description = "Section for configuring Slurm"
+    Order = 40
+
+        [[[parameter configuration_slurm_version]]]
+        required = True
+        label = Slurm Version
+        description = Version of Slurm to install on the cluster
+        defaultvalue = 18.08.7-1
+
+    [[parameters Particleworks Settings ]]
+    Description = "Section for configuring Particleworks."
+    Order = 50
+
+        [[[parameter configuration_PWFileName]]]
+        required = True
+        label = Particleworks Finemane
+        Description = Version of Particleworks to install on the cluster. Package should be named Particleworks <version>.zip
+        defaultvalue = Particleworks 6.2.2 190807_205925_linux.zip
+
+        [[[parameter configuration_LICENSE]]]
+        requied = False
+        label = License Host
+        Description = "License Server Location ex.27000@<Server IP Address>"
+        defaultvalue = 27000@serverIPAddress
+
+        [[[parameter configuration_Hostname1]]]
+        requied = False
+        label = License Hostname
+        Description = "License Host Hostname is required"
+        defaultvalue = licensevm01
+
+    [[parameters Software]]
+    Description = "Specify the scheduling software, and base OS installed on all nodes, and optionally the cluster-init and chef versions from your Locker."
+    Order = 60
+
+        [[[parameter MasterImageName]]]
+        Label = Master OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        # TODO restore ubuntu 
+        #Config.Filter := Package in {"cycle.image.centos7", "cycle.image.ubuntu16", "cycle.image.ubuntu18"}
+        Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest", "cycle.image.ubuntu18"}
+	Order = 61
+
+        [[[parameter HPCImageName]]]
+        Label = HPC OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+#        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+	DefaultValue = microsoft-ads:linux-data-science-vm:linuxdsvm:latest 
+        # TODO restore ubuntu 
+        #Config.Filter := Package in {"cycle.image.centos7", "cycle.image.ubuntu16", "cycle.image.ubuntu18"}
+        #Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest"}
+        Order = 62
+
+        [[[parameter HTCImageName]]]
+        Label = HTC OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        # TODO restore ubuntu 
+        #Config.Filter := Package in {"cycle.image.centos7", "cycle.image.ubuntu16", "cycle.image.ubuntu18"}
+        Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest"}
+        Order = 63
+
+        [[[parameter MasterClusterInitSpecs]]]
+        Label = Master Cluster-Init
+        DefaultValue = =undefined
+        Description = Cluster init specs to apply to the master node
+        ParameterType = Cloud.ClusterInitSpecs
+        Order = 64    
+
+        [[[parameter HTCClusterInitSpecs]]]
+        Label = HTC Cluster-Init
+        DefaultValue = =undefined
+        Description = Cluster init specs to apply to HTC execute nodes
+        ParameterType = Cloud.ClusterInitSpecs
+        Order = 65        
+
+        [[[parameter HPCClusterInitSpecs]]]
+        Label = HPC Cluster-Init
+        DefaultValue = =undefined
+        Description = Cluster init specs to apply to HPC execute nodes
+        ParameterType = Cloud.ClusterInitSpecs
+        Order = 66	
+
+    [[parameters Advanced Networking]]
+    Description = Advanced networking settings
+    Order = 70
+
+        [[[parameter ReturnProxy]]]
+        Label = Return Proxy
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Use SSH tunnel to connect to CycleCloud (required if direct access is blocked)
+
+        [[[parameter UsePublicNetwork]]]
+        Label = Public Head Node
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Access master node from the Internet
+
+        [[[parameter ExecuteNodesPublic]]]
+        Label = Public Execute
+        DefaultValue = false
+        ParameterType = Boolean
+        Config.Label = Access execute nodes from the Internet
+        Conditions.Excluded := UsePublicNetwork isnt true

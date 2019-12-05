@@ -2,16 +2,23 @@
 # Copyright (c) 2019 Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
 set -exuv
 
-echo "starting 10.install_pw.sh"
+echo "starting 10.master.sh"
 
 # disabling selinux
 echo "disabling selinux"
 setenforce 0
 sed -i -e "s/^SELINUX=enforcing$/SELINUX=disabled/g" /etc/selinux/config
 
+# For cyclecoud 7.8.x
 CUSER=$(grep "Added user" /opt/cycle/jetpack/logs/jetpackd.log | awk '{print $6}')
 CUSER=${CUSER//\'/}
 CUSER=${CUSER//\`/}
+if [ -z "$CUSER" ]; then
+  # For cyclecloud 7.9.x
+  CUSER=$(grep "Added user" /opt/cycle/jetpack/logs/initialize.log | awk '{print $6}')
+  CUSER=${CUSER//\'/}
+  CUSER=${CUSER//\`/}
+fi
 echo ${CUSER} > /mnt/exports/shared/CUSER
 HOMEDIR=/shared/home/${CUSER}
 CYCLECLOUD_SPEC_PATH=/mnt/cluster-init/Particleworks/master
@@ -32,20 +39,20 @@ tmpdir=$(mktemp -d)
 pushd $tmpdir
 
 # resource ulimit setting
-CMD1=$(grep ulimit ${HOMEDIR}/.bashrc | head -2)
+CMD1=$(grep memlock ${HOMEDIR}/.bashrc | head -2)
 if [[ -z "${CMD1}" ]]; then
    (echo "ulimit -m unlimited") >> ${HOMEDIR}/.bashrc
 fi
 
 # License Port Setting
-LICENSE=$(jetpack config LICENSE)
 set +u
-(echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/opt/pbs/bin:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") > /etc/profile.d/pw.sh
+LICENSE=$(jetpack config LICENSE)
+(echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:${HOMEDIR}/apps/pw-linux-package/module:/opt/pbs/bin"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module") > /etc/profile.d/pw.sh
 chmod +x /etc/profile.d/pw.sh
 chown ${CUSER}:${CUSER} /etc/profile.d/pw.sh
-CMD2=$(grep PARTICLE_LICENSE_FILE ${HOMEDIR}/.bashrc) | exit 0 
+CMD2=$(grep PARTICLE_LICENSE_FILE ${HOMEDIR}/.bashrc | head -1) | exit 0 
 if [[ -z "${CMD2}" ]]; then
-   (echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:/opt/pbs/bin:/shared/home/azureuser/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module"; echo "export DISPLAY=localhost:0.0") >> ${HOMEDIR}/.bashrc
+   (echo "export PARTICLE_LICENSE_FILE=${LICENSE}"; echo "export PATH=$PATH:${HOMEDIR}/apps/pw-linux-package/module"; echo "export LD_LIBRARY_PATH=${HOMEDIR}/apps/pw-linux-package/module") >> ${HOMEDIR}/.bashrc
 fi
 set -u
 
@@ -59,36 +66,33 @@ if [ ! -d ${HOMEDIR}/apps ]; then
 fi
 chown ${CUSER}:${CUSER} /mnt/exports/apps | exit 0
 
+
 # Installation
-OLDIFS=$IFS
-IFS=
-set +u
-PWFILENAME=$(jetpack config PWFileName)
-PWFILENAME2=${PWFILENAME//\ /}
-if [ ! -f ${HOMEDIR}/apps/pw-linux-package ]; then
-   jetpack download "${PWFILENAME}" ${HOMEDIR}/apps/${PWFILENAME2}
-fi
 if [ ! -d ${HOMEDIR}/apps/pw-linux-package ]; then
-   chown ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME2}"
-   unzip -o -q "${HOMEDIR}/apps/${PWFILENAME2}" -d ${HOMEDIR}/apps/ 
-   mv -f ${HOMEDIR}/apps/${PWFILENAME%.*} ${HOMEDIR}/apps/${PWFILENAME2%.*} | exit 0
-   chown -R ${CUSER}:${CUSER} ${HOMEDIR}/apps/${PWFILENAME2%.*}
-   unzip -o -q ${HOMEDIR}/apps/${PWFILENAME2%.*}/Install/pw-${PW_VERSION}_linux_64.zip -d ${HOMEDIR}/apps/ | exit 0
-   chown -R ${CUSER}:${CUSER} ${HOMEDIR}/apps/pw-linux-package
+   jetpack download "${PWFILENAME}" ${HOMEDIR}/apps
 fi
-chown -R ${CUSER}:${CUSER} ${HOMEDIR}/apps/pw-linux-package
-set -u
-IFS=$OLDIFS
+chown ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME}"
+unzip -o -q "${HOMEDIR}/apps/${PWFILENAME}" -d ${HOMEDIR}/apps 
+chown -R ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME}"
+unzip -o -q "${HOMEDIR}/apps/${PWFILENAME%.zip}/Install/pw-${PW_VERSION}_linux_64.zip" -d ${HOMEDIR}/apps
+
 
 # set up user files
-if [ ! -f ${HOMEDIR}/pwrun.sh ]; then
-   cp ${CYCLECLOUD_SPEC_PATH}/files/pwrun.sh ${HOMEDIR}
+if [ ! -f ${HOMEDIR}/pwsetup.sh ]; then
+   cp ${CYCLECLOUD_SPEC_PATH}/files/pwsetup.sh ${HOMEDIR} 
 fi
-chmod a+rx ${HOMEDIR}/pwrun.sh
-chown ${CUSER}:${CUSER} ${HOMEDIR}/pwrun.sh
+chmod a+rx ${HOMEDIR}/pwsetup.sh
+chown ${CUSER}:${CUSER} ${HOMEDIR}/pwsetup.sh
+
+if [ ! -f ${HOMEDIR}/pwrun.sh ]; then
+#   cp ${CYCLECLOUD_SPEC_PATH}/files/pwrun.sh ${HOMEDIR}
+   : 
+fi
+#chmod a+rx ${HOMEDIR}/pwrun.sh
+#chown ${CUSER}:${CUSER} ${HOMEDIR}/pwrun.sh
 
 #clean up
 popd
 rm -rf $tmpdir
 
-echo "end of 10.install_pw.sh"
+echo "end of 10.master.sh"
