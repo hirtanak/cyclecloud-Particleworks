@@ -1,5 +1,6 @@
 #!/bin/bash
-# Copyright (c) 2019 Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
+# Copyright (c) 2020 Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
+set -x
 echo "starting 10.gpuexecute node set up"
 
 CUSER=$(grep "Added user" /opt/cycle/jetpack/logs/jetpackd.log | awk '{print $6}')
@@ -10,7 +11,7 @@ if [[ -z $CUSER ]]; then
    CUSER=$(grep "Added user" /opt/cycle/jetpack/logs/initialize.log | awk '{print $6}' | head -1)
    CUSER=${CUSER//\`/}
 fi
-echo ${CUSER} > /mnt/exports/shared/CUSER
+echo ${CUSER} > /mnt/exports/CUSER
 HOMEDIR=/shared/home/${CUSER}
 CYCLECLOUD_SPEC_PATH=/mnt/cluster-init/Particleworks/gpuexecute
 
@@ -31,7 +32,19 @@ LICENSE=$(jetpack config LICENSE)
 chmod +x /etc/profile.d/pw.sh
 chown ${CUSER}:${CUSER} /etc/profile.d/pw.sh
 
+# Create tempdir
+tmpdir=$(mktemp -d)
+pushd $tmpdir
+
+# Azure VMs that have ephemeral storage mounted at /mnt/exports.
+if [ ! -d ${HOMEDIR}/apps ]; then
+   sudo -u ${CUSER} ln -s /mnt/exports/apps ${HOMEDIR}/apps
+   chown ${CUSER}:${CUSER} /mnt/exports/apps
+fi
+chown ${CUSER}:${CUSER} /mnt/exports/apps | exit 0
+
 # packages
 yum install -y htop
+
 
 echo "ending 10.gpuexecute node set up"

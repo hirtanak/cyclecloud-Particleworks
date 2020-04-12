@@ -41,6 +41,17 @@ set -u
 # packages
 yum install -y htop
 
+# Create tempdir
+tmpdir=$(mktemp -d)
+pushd $tmpdir
+
+# Azure VMs that have ephemeral storage mounted at /mnt/exports.
+if [ ! -d ${HOMEDIR}/apps ]; then
+   sudo -u ${CUSER} ln -s /mnt/exports/apps ${HOMEDIR}/apps
+   chown ${CUSER}:${CUSER} /mnt/exports/apps
+fi
+chown ${CUSER}:${CUSER} /mnt/exports/apps | exit 0
+
 ## H16r or H16r_Promo
 if [[ $VMSKU = E5-2667 ]]; then
   if [[ -d /opt/intel ]]; then
@@ -82,5 +93,6 @@ if [[ ${CORES} = 60 ]] ; then
     (echo "* hard memlock unlimited"; echo "* soft memlock unlimited"; echo "* hard nofile 65535"; echo "* soft nofile 65535") >> /etc/security/limits.conf
   fi
 fi
+
 
 echo "ending 10.cpuexecute node set up"

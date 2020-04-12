@@ -19,7 +19,7 @@ if [ -z "$CUSER" ]; then
   CUSER=${CUSER//\'/}
   CUSER=${CUSER//\`/}
 fi
-echo ${CUSER} > /mnt/exports/shared/CUSER
+echo ${CUSER} > /mnt/exports/CUSER
 HOMEDIR=/shared/home/${CUSER}
 CYCLECLOUD_SPEC_PATH=/mnt/cluster-init/Particleworks/master
 
@@ -73,9 +73,10 @@ if [ ! -d ${HOMEDIR}/apps/pw-linux-package ]; then
 fi
 chown ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME}"
 unzip -o -q "${HOMEDIR}/apps/${PWFILENAME}" -d ${HOMEDIR}/apps 
-chown -R ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME}"
+# chown -R ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME}"
 unzip -o -q "${HOMEDIR}/apps/${PWFILENAME%.zip}/Install/pw-${PW_VERSION}_linux_64.zip" -d ${HOMEDIR}/apps
-
+chown -R ${CUSER}:${CUSER} "${HOMEDIR}/apps/${PWFILENAME}"
+chown -R ${CUSER}:${CUSER} "${HOMEDIR}/apps/pw-linux-package"
 
 # set up user files
 if [ ! -f ${HOMEDIR}/pwsetup.sh ]; then

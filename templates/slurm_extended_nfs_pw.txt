@@ -1,4 +1,4 @@
-# Copyright (c) master Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
+# Copyright (c) 2020 Hiroshi Tanaka, hirtanak@gmail.com @hirtanak
 # Licensed under the MIT License.
 ################################
 ## Cluster Configuration File ##
@@ -21,10 +21,11 @@ Autoscale = $Autoscale
         [[[configuration]]]
         slurm.version = $configuration_slurm_version
         PWFileName = $configuration_PWFileName
-        LICENSE = $configuration_LICENSE
+        CUDA_VERSION = $configuration_CUDA_VERSION
+	LICENSE = $configuration_LICENSE
 	Hostname1 = $configuration_Hostname1
 
-        [[[cluster-init cyclecloud/slurm:default:2.0.2]]]
+        [[[cluster-init cyclecloud/slurm:default:2.1.0]]]
         Optional = true
 
     [[node master]]
@@ -32,11 +33,12 @@ Autoscale = $Autoscale
     ImageName = $MasterImageName
     IsReturnProxy = $ReturnProxy
     AdditionalClusterInitSpecs = $MasterClusterInitSpecs
+#    InstallJetpack = true
+#    JetpackPlatform = ${configuration_prepost_jetpack_platform[MasterImageName]}
 
         [[[configuration]]]
 
-        [[[cluster-init cyclecloud/slurm:master:2.0.2]]]
-        [[[cluster-init Particleworks:master:2.0.2]]]
+        [[[cluster-init Particleworks:master:2.1.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $UsePublicNetwork
@@ -74,14 +76,17 @@ Autoscale = $Autoscale
     MaxCoreCount = $MaxHPCExecuteCoreCount
     Azure.MaxScalesetSize = $HPCMaxScalesetSize
     AdditionalClusterInitSpecs = $HPCClusterInitSpecs
+#    InstallJetpack = true
+#    JetpackPlatform = ${configuration_prepost_jetpack_platform[HPCImageName]}
 
         [[[configuration]]]
         slurm.autoscale = true
         slurm.default_partition = true
         slurm.hpc = true
 
-        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
-        [[[cluster-init Particleworks:gpuexecute:2.0.2]]]
+        [[[cluster-init Particleworks:gpuexecute:2.1.0]]]
+	run_list = role[slurm_execute_role]
+
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic
@@ -97,13 +102,15 @@ Autoscale = $Autoscale
     MaxCoreCount = $MaxHTCExecuteCoreCount
     Interruptible = $HTCUseLowPrio
     AdditionalClusterInitSpecs = $HTCClusterInitSpecs
+#    InstallJetpack = true
+#    JetpackPlatform = ${configuration_prepost_jetpack_platform[HTCImageName]}
 
         [[[configuration]]]
         slurm.autoscale = true
         slurm.hpc = false
 
-        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
-        [[[cluster-init Particleworks:cpuexecute:2.0.2]]]
+        [[[cluster-init Particleworks:cpuexecute:2.1.0]]]
+        run_list = role[slurm_execute_role]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic
@@ -126,6 +133,20 @@ Order = 1
 
 [parameters Required Settings]
 Order = 10
+
+    [[parameters Slurm Settings ]]
+    Description = "Section for configuring Slurm"
+    Order = 11
+
+        [[[parameter configuration_slurm_version]]]
+        Required = True
+        Label = Slurm Version
+        Description = Version of Slurm to install on the cluster
+        ParameterType = StringList
+        Config.Plugin = pico.form.Dropdown
+        Config.FreeForm = true
+        Config.Entries := {[Value="19.05.5-1"], [Value="18.08.9-1"]}
+        DefaultValue = 19.05.5-1
 
     [[parameters Virtual Machines ]]
     Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application. HPC as default partition for GPU usage. HTC is another partiction for GPU."
@@ -151,7 +172,7 @@ Order = 10
         ParameterType = Cloud.MachineType
         DefaultValue = Standard_NC6s_v3
 
-        Config.Filter := Package in {"Standard_NC6s_v3", "Standard_NC12s_v3", "Standard_NC24rs_v3"}
+        Config.Filter := Package in {"Standard_NC6s_v3", "Standard_NC12s_v3", "Standard_NC24rs_v3", "Standard_ND24rs"}
         config.plugin = pico.control.AutoCompleteDropdown
             [[[[list Config.Entries]]]]
             Name = Standard_NC6s_v3
@@ -165,15 +186,18 @@ Order = 10
             [[[[list Config.Entries]]]]
             Name = Standard_NC24rs_v3
             Label = Standard_NC24rs_v3
+            [[[[list Config.Entries]]]]
+            Name = Standard_ND24rs
+            Label = Standard_ND24rs
         Order = 33
 
         [[[parameter HTCMachineType]]]
         Label = HTC VM Type
         Description = The VM type for HTC execute nodes
         ParameterType = Cloud.MachineType
-        DefaultValue = Standard_H16r
+        DefaultValue = Standard_HC44rs
 
-        Config.Filter := Package in {"Standard_H16r", "Standard_H16r_Promo", "Standard_HB60rs", "Standard_HC44rs"}
+        Config.Filter := Package in {"Standard_H16r", "Standard_H16r_Promo", "Standard_HB60rs", "Standard_HB120rs_v2","Standard_HC44rs"}
         config.plugin = pico.control.AutoCompleteDropdown
             [[[[list Config.Entries]]]]
             Name = Standard_H16r
@@ -184,6 +208,9 @@ Order = 10
             [[[[list Config.Entries]]]]
             Name = Standard_HB60rs
             Label = Standard_HB60rs
+            [[[[list Config.Entries]]]]
+            Name = Standard_HB120rs_v2
+            Label = Standard_HB120rs_v2
             [[[[list Config.Entries]]]]
             Name = Standard_HC44rs
             Label = Standard_HC44rs
@@ -202,7 +229,7 @@ Order = 10
         [[[parameter MaxHPCExecuteCoreCount]]]
         Label = Max HPC Cores
         Description = The total number of HPC execute cores to start
-        DefaultValue = 24
+        DefaultValue = 12
         Config.Plugin = pico.form.NumberTextBox
         Config.MinValue = 1
         Config.IntegerOnly = true
@@ -210,7 +237,7 @@ Order = 10
         [[[parameter MaxHTCExecuteCoreCount]]]
         Label = Max HTC Cores
         Description = The total number of HTC execute cores to start
-        DefaultValue = 32
+        DefaultValue = 88
         Config.Plugin = pico.form.NumberTextBox
         Config.MinValue = 1
         Config.IntegerOnly = true
@@ -218,7 +245,7 @@ Order = 10
         [[[parameter HPCMaxScalesetSize]]]
         Label = Max VMs per Scaleset
         Description = The maximum number of VMs created per VM Scaleset e.g. switch in Slurm.
-        DefaultValue = 100
+        DefaultValue = 500
         Config.Plugin = pico.form.NumberTextBox
         Config.MinValue = 1
         Config.IntegerOnly = true
@@ -255,16 +282,6 @@ Order = 20
         Description = The credentials for the cloud provider
         ParameterType = Cloud.Credentials
 
-    [[parameters Slurm Settings ]]
-    Description = "Section for configuring Slurm"
-    Order = 40
-
-        [[[parameter configuration_slurm_version]]]
-        required = True
-        label = Slurm Version
-        description = Version of Slurm to install on the cluster
-        defaultvalue = 18.08.7-1
-
     [[parameters Particleworks Settings ]]
     Description = "Section for configuring Particleworks."
     Order = 50
@@ -274,6 +291,12 @@ Order = 20
         label = Particleworks Finemane
         Description = Version of Particleworks to install on the cluster. Package should be named Particleworks <version>.zip
         defaultvalue = Particleworks 6.2.2 190807_205925_linux.zip
+
+        [[[parameter configuration_CUDA_VERSION]]]
+        required = False
+        label = CUDA Version
+        Description = CUDA Version
+        defaultvalue = "10.0"
 
         [[[parameter configuration_LICENSE]]]
         requied = False
@@ -296,8 +319,6 @@ Order = 20
         ParameterType = Cloud.Image
         Config.OS = linux
         DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
-        # TODO restore ubuntu 
-        #Config.Filter := Package in {"cycle.image.centos7", "cycle.image.ubuntu16", "cycle.image.ubuntu18"}
         Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest", "cycle.image.ubuntu18"}
 	Order = 61
 
@@ -305,11 +326,9 @@ Order = 20
         Label = HPC OS
         ParameterType = Cloud.Image
         Config.OS = linux
-#        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
-	DefaultValue = microsoft-ads:linux-data-science-vm:linuxdsvm:latest 
-        # TODO restore ubuntu 
-        #Config.Filter := Package in {"cycle.image.centos7", "cycle.image.ubuntu16", "cycle.image.ubuntu18"}
-        #Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest"}
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+#	DefaultValue = microsoft-ads:linux-data-science-vm:linuxdsvm:latest 
+        Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest", "cycle.image.ubuntu18"}
         Order = 62
 
         [[[parameter HTCImageName]]]
@@ -317,10 +336,17 @@ Order = 20
         ParameterType = Cloud.Image
         Config.OS = linux
         DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
-        # TODO restore ubuntu 
-        #Config.Filter := Package in {"cycle.image.centos7", "cycle.image.ubuntu16", "cycle.image.ubuntu18"}
-        Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest"}
+        Config.Filter := Package in {"OpenLogic:CentOS-HPC:7.6:latest", "cycle.image.ubuntu18"}
         Order = 63
+
+        [[[parameter configuration_prepost_jetpack_platform]]]
+        required = True
+        label = Jetpack Platform
+        parametertype = hidden
+            [[[[record DefaultValue]]]]
+            centos7 = centos-7
+            OpenLogic:CentOS-HPC:7.6:latest = centos-7
+            cycle.image.ubuntu18 = ubuntu-16.04
 
         [[[parameter MasterClusterInitSpecs]]]
         Label = Master Cluster-Init

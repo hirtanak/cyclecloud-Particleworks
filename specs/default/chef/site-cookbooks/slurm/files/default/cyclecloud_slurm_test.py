@@ -1,3 +1,4 @@
+
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 #
@@ -19,6 +20,9 @@ from cyclecloud_slurm import Partition, ExistingNodePolicy, CyclecloudSlurmError
 import cyclecloud_slurm
 from cyclecloud.model.NodeCreationResultModule import NodeCreationResult
 from cyclecloud.model.NodeCreationResultSetModule import NodeCreationResultSet
+import tempfile
+import os
+import json
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
@@ -289,7 +293,8 @@ class CycleCloudSlurmTest(unittest.TestCase):
     def test_generate_slurm_conf(self):
         writer = cStringIO.StringIO()
         partitions = OrderedDict()
-        partitions["hpc"] = Partition("custom_partition_name", "hpc", "Standard_D2_v2", is_default=True, is_hpc=True, max_scaleset_size=3, vcpu_count=2, memory=4, max_vm_count=8)
+        # use dampen_memory = .02 to test overriding this
+        partitions["hpc"] = Partition("custom_partition_name", "hpc", "Standard_D2_v2", is_default=True, is_hpc=True, max_scaleset_size=3, vcpu_count=2, memory=128, max_vm_count=8, dampen_memory=.02)
         partitions["htc"] = Partition("htc", "htc", "Standard_D2_v3", is_default=False, max_scaleset_size=100, is_hpc=False, vcpu_count=2, memory=3.5, max_vm_count=8)
 
         partitions["hpc"].node_list = "hpc-10[1-8]"
@@ -304,12 +309,18 @@ class CycleCloudSlurmTest(unittest.TestCase):
             cyclecloud_slurm._generate_slurm_conf(partitions, writer, mock_subprocess)
         result = writer.getvalue().strip()
         expected = '''
-PartitionName=custom_partition_name Nodes=hpc-10[1-8] Default=YES MaxTime=INFINITE State=UP
-Nodename=hpc-10[1-3] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=4096
-Nodename=hpc-10[4-6] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=4096
-Nodename=hpc-10[7-8] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=4096
-PartitionName=htc Nodes=htc-[1-8] Default=NO MaxTime=INFINITE State=UP
-Nodename=htc-[1-8] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=3584'''.strip()
+# Note: CycleCloud reported a RealMemory of 131072 but we reduced it by 2621 (i.e. max(1gb, 2%)) to account for OS/VM overhead which
+# would result in the nodes being rejected by Slurm if they report a number less than defined here.
+# To pick a different percentage to dampen, set slurm.dampen_memory=X in the nodearray's Configuration where X is percentage (5 = 5%).
+PartitionName=custom_partition_name Nodes=hpc-10[1-8] Default=YES DefMemPerCPU=64225 MaxTime=INFINITE State=UP
+Nodename=hpc-10[1-3] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=128450
+Nodename=hpc-10[4-6] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=128450
+Nodename=hpc-10[7-8] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=128450
+# Note: CycleCloud reported a RealMemory of 3584 but we reduced it by 1024 (i.e. max(1gb, 5%)) to account for OS/VM overhead which
+# would result in the nodes being rejected by Slurm if they report a number less than defined here.
+# To pick a different percentage to dampen, set slurm.dampen_memory=X in the nodearray's Configuration where X is percentage (5 = 5%).
+PartitionName=htc Nodes=htc-[1-8] Default=NO DefMemPerCPU=1280 MaxTime=INFINITE State=UP
+Nodename=htc-[1-8] Feature=cloud STATE=CLOUD CPUs=2 RealMemory=2560'''.strip()
         for e, a in zip(result.splitlines(), expected.splitlines()):
             assert e == a, "\n%s\n%s" % (e, a)
         
@@ -372,3 +383,26 @@ SwitchName=htc Nodes=htc-[1-8]'''.strip()
             subprocess_module.expect("scontrol update NodeName=hpc-44 NodeAddr=10.1.0.1 NodeHostname=10.1.0.1".split())
             mock_cluster.expected_start_nodes_request = {'names': ['hpc-1', 'hpc-44']}
             cyclecloud_slurm._resume(["hpc-1", "hpc-44"], cluster_wrapper, subprocess_module)
+            
+    def test_iniitialize(self):
+        tmp = tempfile.mktemp()
+        try:
+            #  create the config
+            cyclecloud_slurm.initialize_config(tmp, cluster_name="c1", username="u1", password="p1", url="https://url1", force=False)
+            self.assertEquals(json.load(open(tmp)), {"cluster_name": "c1", "username": "u1", "password": "p1", "url": "https://url1"})
+            try:
+                # try to recreate the config without --force
+                cyclecloud_slurm.initialize_config(tmp, cluster_name="c2", username="u2", password="p2", url="https://url2", force=False)
+                self.fail("should have raise an error")
+            except CyclecloudSlurmError as e:
+                # ensure --force is in there
+                self.assertIn("--force", str(e))
+            # make sure nothing changed
+            self.assertEquals(json.load(open(tmp)), {"cluster_name": "c1", "username": "u1", "password": "p1", "url": "https://url1"})
+            
+            # now force the change and make sure things are updated
+            cyclecloud_slurm.initialize_config(tmp, cluster_name="c2", username="u2", password="p2", url="https://url2", force=True)
+            self.assertEquals(json.load(open(tmp)), {"cluster_name": "c2", "username": "u2", "password": "p2", "url": "https://url2"})
+        finally:
+            if os.path.exists(tmp):
+                os.remove(tmp)

@@ -50,13 +50,13 @@ when 'ubuntu'
   slurmrpms.each do |slurmpkg|
     jetpack_download "#{slurmpkg}_#{slurmver}_amd64.deb" do
       project "Particleworks"
-      not_if { ::File.exist?("#{node[:jetpack][:downloads]}/#{slurmpkg}_#{slurmver}_amd64.deb") }
+      not_if { ::File.exist?("#{node[:jetpack][:downloads]}/#{slurmpkg}_#{slurmver}_#{slurmarch}.deb") }
     end
   end
 
   slurmrpms.each do |slurmpkg|
     execute "Install #{slurmpkg}_#{slurmver}_amd64.deb" do
-      command "apt install -y #{node[:jetpack][:downloads]}/#{slurmpkg}_#{slurmver}_amd64.deb"
+      command "apt install -y #{node[:jetpack][:downloads]}/#{slurmpkg}_#{slurmver}_#{slurmarch}.deb"
       action :run
       not_if { ::File.exist?("/var/spool/slurmd") }
     end
@@ -87,6 +87,12 @@ when 'ubuntu'
 
 
 when 'centos'
+  # Required for munge
+  package 'epel-release'
+
+  # slurm package depends on munge
+  package 'munge'
+
   slurmrpms = %w[slurm slurm-devel slurm-example-configs slurm-slurmctld slurm-slurmd slurm-perlapi slurm-torque slurm-openlava]
   slurmrpms.each do |slurmpkg|
     jetpack_download "#{slurmpkg}-#{slurmver}.#{slurmarch}.rpm" do
